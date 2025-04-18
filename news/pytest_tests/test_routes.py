@@ -3,8 +3,9 @@ import pytest
 from pytest_django.asserts import assertRedirects
 from django.urls import reverse
 
+pytestmark = pytest.mark.django_db
 
-@pytest.mark.django_db
+
 @pytest.mark.parametrize(
     'url_name, news_object',
     [
@@ -51,7 +52,6 @@ def test_comment_edit_delete_access(client, name, comment, expected_status):
     assert response.status_code == expected_status
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize(
     'url_name, news_object',
     [

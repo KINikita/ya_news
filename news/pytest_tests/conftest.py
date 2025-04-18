@@ -9,6 +9,18 @@ from django.conf import settings
 from news.models import Comment, News
 
 
+@pytest.fixture(autouse=True)
+def clean_news():
+    """Автоматически очищает все новости перед каждым тестом."""
+    News.objects.all().delete()
+    yield
+
+@pytest.fixture(autouse=True)
+def clean_comments():
+    """Автоматически очищает все комментарии перед каждым тестом."""
+    Comment.objects.all().delete()
+    yield
+
 @pytest.fixture
 def home_url():
     return reverse('news:home')
@@ -39,7 +51,7 @@ def not_author_client(not_author):
 
 
 @pytest.fixture
-def news(author, scope='module'):
+def news(author):
     news = News.objects.create(
         title='Заголовок новости',
         text='Текст новости',
@@ -57,7 +69,7 @@ def comment(author, news):
 
 
 @pytest.fixture
-def list_of_news(author):
+def list_of_news(clean_news, author):
     all_news = [
         News(title=f'Новость {index}', text='Просто текст.')
         for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
@@ -67,7 +79,7 @@ def list_of_news(author):
 
 
 @pytest.fixture
-def list_of_comments(news, author):
+def list_of_comments(clean_comments, news, author):
     """Фикстура создаёт 5 комментариев с разными датами создания."""
     comments = []
     now = timezone.now()
@@ -84,16 +96,4 @@ def list_of_comments(news, author):
 @pytest.fixture
 def detail_url(news):
     """Фикстура возвращает URL страницы новости."""
-    return (news.id,)
-
-
-@pytest.fixture
-def news_with_comments(news, author, detail_url, list_of_comments):
-    """Комплексная фикстура, объединяющая все данные."""
-    print("Даты комментариев:", [c.created for c in list_of_comments])
-    return {
-        'news': news,
-        'author': author,
-        'detail_url': reverse('news:detail', args=detail_url),
-        'comments': list_of_comments
-    }
+    return reverse('news:detail', args=(news.id,))
