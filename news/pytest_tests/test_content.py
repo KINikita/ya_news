@@ -21,12 +21,13 @@ def test_news_order(client, home_url, list_of_news):
     assert dates == sorted(dates, reverse=True)
 
 
-def test_comments_order(client, detail_url, news):
+def test_comments_order(client, detail_url, list_of_comments):
     """Проверяем, что комментарии отсортированы от старых к новым."""
     response = client.get(detail_url)
-    news = news
-    comments = news.comment_set.all()
-    dates = [comment.created for comment in comments]
+    news = response.context['news']
+    comments_list = news.comment_set.all()
+    dates = [comment.created for comment in comments_list]
+    assert len(comments_list) == settings.NEWS_COUNT_ON_HOME_PAGE
     assert dates == sorted(dates, reverse=False)
 
 
