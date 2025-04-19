@@ -1,31 +1,51 @@
 from datetime import timedelta
-from django.urls import reverse
-from django.utils import timezone
+
 import pytest
 
-from django.test.client import Client
 from django.conf import settings
+from django.test.client import Client
+from django.urls import reverse
+from django.utils import timezone
 
 from news.models import Comment, News
-
-
-@pytest.fixture(autouse=True)
-def clean_news():
-    """Автоматически очищает все новости перед каждым тестом."""
-    News.objects.all().delete()
-    yield
-
-
-@pytest.fixture(autouse=True)
-def clean_comments():
-    """Автоматически очищает все комментарии перед каждым тестом."""
-    Comment.objects.all().delete()
-    yield
 
 
 @pytest.fixture
 def home_url():
     return reverse('news:home')
+
+
+@pytest.fixture
+def login_url():
+    return reverse('users:login')
+
+
+@pytest.fixture
+def logout_url():
+    return reverse('users:logout')
+
+
+@pytest.fixture
+def signup_url():
+    return reverse('users:signup')
+
+
+@pytest.fixture
+def detail_url(news):
+    """Фикстура возвращает URL страницы новости."""
+    return reverse('news:detail', args=(news.id,))
+
+
+@pytest.fixture
+def edit_url(news):
+    """Фикстура возвращает URL для удаления комментария."""
+    return reverse('news:edit', args=(news.id,))
+
+
+@pytest.fixture
+def delete_url(news):
+    """Фикстура возвращает URL для удаления комментария."""
+    return reverse('news:delete', args=(news.id,))
 
 
 @pytest.fixture
@@ -73,29 +93,36 @@ def comment(author, news):
 @pytest.fixture
 def list_of_news(author):
     all_news = [
-        News(title=f'Новость {index}', text='Просто текст.')
+        News(
+            title=f'Новость {index}',
+            text='Просто текст.',
+            date=timezone.now() + timedelta(days=index),
+        )
         for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
     ]
     News.objects.bulk_create(all_news)
-    return all_news
 
 
 @pytest.fixture
 def list_of_comments(news, author):
-    """Фикстура создаёт 10 комментариев с разными датами создания."""
-    comments = []
+    """
+    Фикстура создаёт список комментариев с разными датами создания.
+    Количество комментариев задается в настройках проекта:
+    settings.NEWS_COUNT_ON_HOME_PAGE
+    """
     now = timezone.now()
-    # Создаём комментарии в цикле.
     for index in range(settings.NEWS_COUNT_ON_HOME_PAGE):
         comment = Comment.objects.create(
-            news=news, author=author, text=f'Tекст {index}',
+            news=news,
+            author=author,
+            text=f'Tекст {index}',
         )
         comment.created = now + timedelta(days=index)
-        comments.append(comment)
-    return comments
+        comment.save()
 
 
-@pytest.fixture
-def detail_url(news):
-    """Фикстура возвращает URL страницы новости."""
-    return reverse('news:detail', args=(news.id,))
+@pytest.fixture()
+def clean_comments():
+    """Автоматически очищает все комментарии перед каждым тестом."""
+    Comment.objects.all().delete()
+    yield

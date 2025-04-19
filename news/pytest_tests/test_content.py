@@ -1,4 +1,5 @@
 import pytest
+
 from django.conf import settings
 
 from news.forms import CommentForm
@@ -7,17 +8,20 @@ pytestmark = pytest.mark.django_db
 
 
 def test_news_count(client, home_url, list_of_news):
-    """Проверяем, что количество новостей на главной странице не более 10."""
+    """
+    Проверяем, что количество новостей на главной странице
+    не больше значения заданного в настройках:
+    settings.NEWS_COUNT_ON_HOME_PAGE.
+    """
     response = client.get(home_url)
-    object_list = response.context['object_list']
-    assert object_list.count() == settings.NEWS_COUNT_ON_HOME_PAGE
+    assert response.context['object_list'].count(
+    ) == settings.NEWS_COUNT_ON_HOME_PAGE
 
 
 def test_news_order(client, home_url, list_of_news):
     """Проверяем, что новости отсортированы от новых к старым."""
     response = client.get(home_url)
-    news_list = response.context['object_list']
-    dates = [news.date for news in news_list]
+    dates = [news.date for news in response.context['object_list']]
     assert dates == sorted(dates, reverse=True)
 
 
