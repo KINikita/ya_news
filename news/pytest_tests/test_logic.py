@@ -1,9 +1,8 @@
-import http
-
 import pytest
 
 from news.forms import BAD_WORDS, WARNING
 from news.models import Comment
+from news.pytest_tests.pytest_parts.constants import STATUSES
 
 pytestmark = pytest.mark.django_db
 
@@ -16,18 +15,18 @@ def test_anonymous_user_cant_create_comment(client, detail_url):
 
 
 def test_user_can_create_comment(
-    clean_comments,
     author_client,
     detail_url,
     news,
     author
 ):
+    Comment.objects.all().delete()
     form_data = {'text': '+ 1 комментарий'}
     initial_count = Comment.objects.count()
     response = author_client.post(detail_url, data=form_data)
     assert response.url == f'{detail_url}#comments'
     assert Comment.objects.count() == initial_count + 1
-    new_comment = Comment.objects.latest('id')
+    new_comment = Comment.objects.get()
     assert new_comment.text == form_data['text']
     assert new_comment.news == news
     assert new_comment.author == author
@@ -62,7 +61,7 @@ def test_author_can_delete_own_comment(
     news_url = detail_url + '#comments'
     response = author_client.delete(delete_url)
     assert Comment.objects.count() == initial_count - 1
-    assert response.status_code == http.HTTPStatus.FOUND, (
+    assert response.status_code == STATUSES['302'], (
         f"Ожидался статус 302, получен {response.status_code}. "
         f"URL: {delete_url}"
     )
@@ -70,7 +69,7 @@ def test_author_can_delete_own_comment(
     assert not Comment.objects.filter(id=comment.id).exists()
 
 
-def test_author_can_not_delete_not_own_comment(
+def test_not_author_can_not_delete_not_own_comment(
     not_author_client,
     delete_url,
     comment,
@@ -81,9 +80,44 @@ def test_author_can_not_delete_not_own_comment(
     """
     initial_count = Comment.objects.count()
     response = not_author_client.delete(delete_url)
-    assert response.status_code == http.HTTPStatus.NOT_FOUND, (
+    assert response.status_code == STATUSES['404'], (
         f"Ожидался статус 404, получен {response.status_code}. "
         f"URL: {delete_url}"
     )
     assert Comment.objects.filter(id=comment.id).exists()
     assert Comment.objects.count() == initial_count
+
+
+def test_author_can_edit_own_comment(
+    author_client,
+    comment,
+    form_data,
+    edit_url,
+    detail_url,
+):
+    """
+    Тест проверяет, что авторизованный пользователь
+    может обновить свой комментарий.
+    """
+    response = author_client.post(edit_url, form_data)
+    news_url = detail_url + '#comments'
+    assert response.status_code == STATUSES['302']
+    updated_comment = Comment.objects.get(id=comment.id)
+    assert response.url == news_url
+    assert updated_comment.text == form_data['text']
+
+
+def test_not_author_can_not_edit__not_own_comment(
+    not_author_client,
+    comment,
+    form_data,
+    edit_url,
+):
+    """
+    Тест проверяет, что авторизованный пользователь
+    может обновить свой комментарий.
+    """
+    response = not_author_client.post(edit_url, form_data)
+    assert response.status_code == STATUSES['404']
+    updated_comment = Comment.objects.get(id=comment.id)
+    assert updated_comment.text != form_data['text']

@@ -1,9 +1,10 @@
-from http import HTTPStatus
-
 from django.test import Client
 
 import pytest
 from pytest_django.asserts import assertRedirects
+from pytest_lazyfixture import lazy_fixture as lf
+
+from news.pytest_tests.pytest_parts.constants import STATUSES
 
 pytestmark = pytest.mark.django_db
 
@@ -11,20 +12,20 @@ pytestmark = pytest.mark.django_db
 @pytest.mark.parametrize(
     'url_name, client, expected_status',
     [
-        (pytest.lazy_fixture('home_url'), None, HTTPStatus.OK),
-        (pytest.lazy_fixture('login_url'), None, HTTPStatus.OK),
-        (pytest.lazy_fixture('logout_url'), None, HTTPStatus.OK),
-        (pytest.lazy_fixture('signup_url'), None, HTTPStatus.OK),
-        (pytest.lazy_fixture('detail_url'), None, HTTPStatus.OK),
+        (lf('home_url'), Client(), STATUSES['200']),
+        (lf('login_url'), Client(), STATUSES['200']),
+        (lf('logout_url'), Client(), STATUSES['200']),
+        (lf('signup_url'), Client(), STATUSES['200']),
+        (lf('detail_url'), Client(), STATUSES['200']),
 
-        (pytest.lazy_fixture('edit_url'), pytest.lazy_fixture(
-            'not_author_client'), HTTPStatus.NOT_FOUND),
-        (pytest.lazy_fixture('edit_url'), pytest.lazy_fixture(
-            'author_client'), HTTPStatus.OK),
-        (pytest.lazy_fixture('delete_url'), pytest.lazy_fixture(
-            'not_author_client'), HTTPStatus.NOT_FOUND),
-        (pytest.lazy_fixture('delete_url'),
-         pytest.lazy_fixture('author_client'), HTTPStatus.OK),
+        (lf('edit_url'), lf(
+            'not_author_client'), STATUSES['404']),
+        (lf('edit_url'), lf(
+            'author_client'), STATUSES['200']),
+        (lf('delete_url'), lf(
+            'not_author_client'), STATUSES['404']),
+        (lf('delete_url'),
+         lf('author_client'), STATUSES['200']),
     ],
     ids=[
         'home page - anonymous',
@@ -43,7 +44,7 @@ def test_pages_availability(client, url_name, expected_status, comment):
     Тест доступности страниц для разных типов пользователей.
     Если client=None, используется анонимный клиент из параметра.
     """
-    test_client = client if client is not None else Client()
+    test_client = client
     response = test_client.get(url_name)
     assert response.status_code == expected_status
 
@@ -51,8 +52,8 @@ def test_pages_availability(client, url_name, expected_status, comment):
 @pytest.mark.parametrize(
     'url_name',
     [
-        pytest.lazy_fixture('edit_url'),
-        pytest.lazy_fixture('delete_url'),
+        lf('edit_url'),
+        lf('delete_url'),
     ],
 )
 def test_redirects_for_anonymous_client(login_url, client, url_name):

@@ -1,51 +1,12 @@
 from datetime import timedelta
 
 import pytest
-
 from django.conf import settings
 from django.test.client import Client
 from django.urls import reverse
 from django.utils import timezone
 
 from news.models import Comment, News
-
-
-@pytest.fixture
-def home_url():
-    return reverse('news:home')
-
-
-@pytest.fixture
-def login_url():
-    return reverse('users:login')
-
-
-@pytest.fixture
-def logout_url():
-    return reverse('users:logout')
-
-
-@pytest.fixture
-def signup_url():
-    return reverse('users:signup')
-
-
-@pytest.fixture
-def detail_url(news):
-    """Фикстура возвращает URL страницы новости."""
-    return reverse('news:detail', args=(news.id,))
-
-
-@pytest.fixture
-def edit_url(news):
-    """Фикстура возвращает URL для удаления комментария."""
-    return reverse('news:edit', args=(news.id,))
-
-
-@pytest.fixture
-def delete_url(news):
-    """Фикстура возвращает URL для удаления комментария."""
-    return reverse('news:delete', args=(news.id,))
 
 
 @pytest.fixture
@@ -91,6 +52,14 @@ def comment(author, news):
 
 
 @pytest.fixture
+def form_data():
+    """Фикстура возвращает данные для заполнения формы нового комментария."""
+    return {
+        'text': 'Новый текст комментария',
+    }
+
+
+@pytest.fixture
 def list_of_news(author):
     all_news = [
         News(
@@ -121,8 +90,39 @@ def list_of_comments(news, author):
         comment.save()
 
 
-@pytest.fixture()
-def clean_comments():
-    """Автоматически очищает все комментарии перед каждым тестом."""
-    Comment.objects.all().delete()
-    yield
+@pytest.fixture
+def home_url():
+    return reverse('news:home')
+
+
+@pytest.fixture
+def login_url():
+    return reverse('users:login')
+
+
+@pytest.fixture
+def logout_url():
+    return reverse('users:logout')
+
+
+@pytest.fixture
+def signup_url():
+    return reverse('users:signup')
+
+
+@pytest.fixture
+def detail_url(news):
+    """Фикстура возвращает URL страницы новости."""
+    return reverse('news:detail', args=(news.id,))
+
+
+@pytest.fixture
+def edit_url(comment):
+    """Фикстура возвращает URL для обновления комментария."""
+    return reverse('news:edit', args=(comment.id,))
+
+
+@pytest.fixture
+def delete_url(comment):
+    """Фикстура возвращает URL для удаления комментария."""
+    return reverse('news:delete', args=(comment.id,))

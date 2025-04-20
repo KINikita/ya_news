@@ -1,5 +1,4 @@
 import pytest
-
 from django.conf import settings
 
 from news.forms import CommentForm
@@ -29,9 +28,9 @@ def test_comments_order(client, detail_url, list_of_comments):
     """Проверяем, что комментарии отсортированы от старых к новым."""
     response = client.get(detail_url)
     news = response.context['news']
-    comments_list = news.comment_set.all()
-    dates = [comment.created for comment in comments_list]
-    assert len(comments_list) == settings.NEWS_COUNT_ON_HOME_PAGE
+    comments = news.comment_set.all()
+    dates = [comment.created for comment in comments]
+    assert len(comments) == settings.NEWS_COUNT_ON_HOME_PAGE
     assert dates == sorted(dates, reverse=False)
 
 
