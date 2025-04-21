@@ -52,14 +52,6 @@ def comment(author, news):
 
 
 @pytest.fixture
-def form_data():
-    """Фикстура возвращает данные для заполнения формы нового комментария."""
-    return {
-        'text': 'Новый текст комментария',
-    }
-
-
-@pytest.fixture
 def list_of_news(author):
     all_news = [
         News(

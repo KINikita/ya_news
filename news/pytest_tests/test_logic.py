@@ -2,7 +2,7 @@ import pytest
 
 from news.forms import BAD_WORDS, WARNING
 from news.models import Comment
-from news.pytest_tests.pytest_parts.constants import STATUSES
+from news.pytest_tests.pytest_parts.constants import STATUSES, FORM_DATA
 
 pytestmark = pytest.mark.django_db
 
@@ -91,33 +91,35 @@ def test_not_author_can_not_delete_not_own_comment(
 def test_author_can_edit_own_comment(
     author_client,
     comment,
-    form_data,
     edit_url,
     detail_url,
+    author,
 ):
     """
     Тест проверяет, что авторизованный пользователь
     может обновить свой комментарий.
     """
-    response = author_client.post(edit_url, form_data)
+    response = author_client.post(edit_url, FORM_DATA)
     news_url = detail_url + '#comments'
     assert response.status_code == STATUSES['302']
     updated_comment = Comment.objects.get(id=comment.id)
     assert response.url == news_url
-    assert updated_comment.text == form_data['text']
+    assert updated_comment.text == FORM_DATA['text']
+    assert updated_comment.author == author
 
 
 def test_not_author_can_not_edit__not_own_comment(
     not_author_client,
     comment,
-    form_data,
     edit_url,
+    author,
 ):
     """
     Тест проверяет, что авторизованный пользователь
     может обновить свой комментарий.
     """
-    response = not_author_client.post(edit_url, form_data)
+    response = not_author_client.post(edit_url, FORM_DATA)
     assert response.status_code == STATUSES['404']
     updated_comment = Comment.objects.get(id=comment.id)
-    assert updated_comment.text != form_data['text']
+    assert updated_comment.text == comment.text
+    assert updated_comment.author == author

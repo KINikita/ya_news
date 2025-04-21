@@ -12,20 +12,16 @@ pytestmark = pytest.mark.django_db
 @pytest.mark.parametrize(
     'url_name, client, expected_status',
     [
-        (lf('home_url'), Client(), STATUSES['200']),
-        (lf('login_url'), Client(), STATUSES['200']),
-        (lf('logout_url'), Client(), STATUSES['200']),
-        (lf('signup_url'), Client(), STATUSES['200']),
-        (lf('detail_url'), Client(), STATUSES['200']),
+        (lf('home_url'), Client(), '200'),
+        (lf('login_url'), Client(), '200'),
+        (lf('logout_url'), Client(), '200'),
+        (lf('signup_url'), Client(), '200'),
+        (lf('detail_url'), Client(), '200'),
 
-        (lf('edit_url'), lf(
-            'not_author_client'), STATUSES['404']),
-        (lf('edit_url'), lf(
-            'author_client'), STATUSES['200']),
-        (lf('delete_url'), lf(
-            'not_author_client'), STATUSES['404']),
-        (lf('delete_url'),
-         lf('author_client'), STATUSES['200']),
+        (lf('edit_url'), lf('not_author_client'), '404'),
+        (lf('edit_url'), lf('author_client'), '200'),
+        (lf('delete_url'), lf('not_author_client'), '404'),
+        (lf('delete_url'), lf('author_client'), '200'),
     ],
     ids=[
         'home page - anonymous',
@@ -46,7 +42,7 @@ def test_pages_availability(client, url_name, expected_status, comment):
     """
     test_client = client
     response = test_client.get(url_name)
-    assert response.status_code == expected_status
+    assert response.status_code == STATUSES[expected_status]
 
 
 @pytest.mark.parametrize(

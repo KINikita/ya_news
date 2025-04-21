@@ -5,3 +5,7 @@ STATUSES = {
     '302': HTTPStatus.FOUND,
     '404': HTTPStatus.NOT_FOUND,
 }
+
+FORM_DATA = {
+    'text': 'Новый текст',
+}
